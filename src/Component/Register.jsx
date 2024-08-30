@@ -149,7 +149,7 @@ function Register() {
                     Register
                 </button>
                 <div className="mt-2 text-gray-600">
-                    <p>Sudah punya akun? <Link className="font-semibold" to="/login">Login</Link></p>
+                    <p>Sudah punya akun? <Link className="font-semibold" to="/">Login</Link></p>
                 </div>
             </form>
         </section>
