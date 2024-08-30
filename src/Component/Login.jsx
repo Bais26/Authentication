@@ -3,7 +3,7 @@ import { GoInfo } from 'react-icons/go';
 import { IoMdCheckmark } from 'react-icons/io';
 import { LiaTimesCircle } from 'react-icons/lia';
 import { Link, useNavigate } from "react-router-dom";
-import axios from 'axios';
+import axiosInstance from '../api'; // Pastikan path ini sesuai dengan file axiosInstance Anda
 
 const UserValid = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/;
 const PassValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
@@ -48,18 +48,18 @@ function Login() {
 
         try {
             const response = await axiosInstance.post('/login', {
-                username: user,
+                nama: user, // Pastikan parameter sesuai dengan yang diharapkan oleh server
                 password: password
-            }, {
-                withCredentials: true
             });
 
-            // Jika login berhasil, simpan token di cookies atau localStorage
+           
+            localStorage.setItem('authToken', response.data.token);
+            localStorage.setItem('username', user);
             setSuccess(true);
             setErrMsg('');
             setTimeout(() => {
-                navigate('/home'); // Redirect ke halaman home
-            }, 2000);
+                navigate('/home');
+            }, 1000);
         } catch (error) {
             setErrMsg(error.response?.data?.message || 'Login gagal. Coba lagi.');
             setSuccess(false);
@@ -127,7 +127,7 @@ function Login() {
                     Login
                 </button>
                 <div className="mt-2 text-gray-600">
-                    <p>belum punya akun? <Link className="font-semibold" to="/register">Daftar akun</Link></p>
+                    <p>Belum punya akun? <Link className="font-semibold" to="/register">Daftar akun</Link></p>
                 </div>
             </form>
         </section>
