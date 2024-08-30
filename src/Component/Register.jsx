@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { GoInfo } from 'react-icons/go';
 import { IoMdCheckmark } from 'react-icons/io';
 import { LiaTimesCircle } from 'react-icons/lia';
+import { Link } from "react-router-dom";
 
 const UserValid = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/;
 const PassValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
@@ -130,6 +131,10 @@ function Register() {
                 <button className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                     Register
                 </button>
+
+                 <div className="mt-2 text-gray-600">
+                    <p>sudah punya akun? <Link className="font-semibold" to="/">Masuk</Link></p>
+                </div>
             </form>
         </section>
     );
