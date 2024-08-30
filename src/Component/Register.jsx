@@ -2,7 +2,8 @@ import { useRef, useState, useEffect } from "react";
 import { GoInfo } from 'react-icons/go';
 import { IoMdCheckmark } from 'react-icons/io';
 import { LiaTimesCircle } from 'react-icons/lia';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axiosInstance from '../api'
 
 const UserValid = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/;
 const PassValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
@@ -10,21 +11,17 @@ const PassValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
 function Register() {
     const userRef = useRef();
     const errRef = useRef();
-
+    const navigate = useNavigate(); // Hook untuk navigasi
     const [user, setUser] = useState('');
     const [userValidName, setValidName] = useState(false);
     const [userFocus, setUserFocus] = useState(false);
-
     const [password, setPassword] = useState('');
     const [passValid, setpassValid] = useState(false);
     const [passFocus, setpassFocus] = useState(false);
-
-    const [ispassword, setIsPassword] = useState('');
-    const [ispassValid, setIspassValid] = useState(false);
-    const [ispassFocus, setIspassFocus] = useState(false);
-
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [match, setMatch] = useState(false);
     const [errMsg, setErrMsg] = useState('');
-    const [succes, setsucces] = useState(false);
+    const [success, setSuccess] = useState(false);
 
     useEffect(() => {
         userRef.current.focus();
@@ -38,19 +35,44 @@ function Register() {
     useEffect(() => {
         const result = PassValid.test(password);
         setpassValid(result);
-        const match = password === ispassword;
-        setIspassValid(match);
-    }, [password, ispassword]);
+        const match = password === confirmPassword;
+        setMatch(match);
+    }, [password, confirmPassword]);
 
     useEffect(() => {
         setErrMsg('');
-    }, [user, password, ispassword]);
+    }, [user, password, confirmPassword]);
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        if (!userValidName || !passValid || !match) {
+            setErrMsg('Isi semua field dengan benar.');
+            return;
+        }
+
+        try {
+            const response = await axiosInstance.post('/register', {
+                nama: user,
+                password: password,
+                confirmPassword: confirmPassword
+            });
+
+            setSuccess(true);
+            setErrMsg('');
+            setTimeout(() => {
+                navigate('/');
+            }, 2000);
+        } catch (error) {
+            setErrMsg(error.response?.data?.message || 'Pendaftaran gagal. Coba lagi.');
+            setSuccess(false);
+        }
+    };
 
     return (
         <section className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
             <p ref={errRef} className={`text-red-500 ${errMsg ? "block" : "hidden"}`} aria-live="assertive">{errMsg}</p>
             <h1 className="text-2xl font-bold mb-4">Register</h1>
-            <form className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <form onSubmit={handleRegister} className="bg-white p-6 rounded shadow-md w-full max-w-md">
                 <label htmlFor="username" className="block mb-2 font-medium">
                     Username:
                     <span className={userValidName ? "text-green-500" : "hidden"}>
@@ -103,37 +125,31 @@ function Register() {
                     8 to 24 characters. Must include uppercase and lowercase letters, a number and a special character. Allowed special characters: ! @ # $ %
                 </p>
 
-                <label htmlFor="confirm_pass" className="block mb-2 font-medium">
+                <label htmlFor="confirm_password" className="block mb-2 font-medium">
                     Confirm Password:
-                    <span className={ispassValid && ispassword ? "text-green-500" : "hidden"}>
-                        <IoMdCheckmark />
-                    </span>
-                    <span className={!ispassValid && ispassword ? "text-red-500" : "hidden"}>
-                        <LiaTimesCircle />
+                    <span className={match ? "text-green-500" : "text-red-500"}>
+                        {match ? <IoMdCheckmark /> : <LiaTimesCircle />}
                     </span>
                 </label>
                 <input
                     type="password"
-                    id="confirm_pass"
-                    className="w-full p-2 border rounded mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    onChange={(e) => setIsPassword(e.target.value)}
+                    id="confirm_password"
+                    className="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    aria-invalid={ispassValid ? "false" : "true"}
+                    aria-invalid={match ? "false" : "true"}
                     aria-describedby="confirmnote"
-                    onFocus={() => setIspassFocus(true)}
-                    onBlur={() => setIspassFocus(false)}
                 />
-                <p id="confirmnote" className={`text-sm text-gray-600 mb-4 ${ispassFocus && !ispassValid ? "block" : "hidden"}`}>
+                <p id="confirmnote" className={`text-sm text-gray-600 ${!match && confirmPassword ? "block" : "hidden"}`}>
                     <GoInfo className="inline mr-1" />
-                    Must match the first password input field.
+                    Passwords must match.
                 </p>
 
-                <button className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                     Register
                 </button>
-
-                 <div className="mt-2 text-gray-600">
-                    <p>sudah punya akun? <Link className="font-semibold" to="/">Masuk</Link></p>
+                <div className="mt-2 text-gray-600">
+                    <p>Sudah punya akun? <Link className="font-semibold" to="/login">Login</Link></p>
                 </div>
             </form>
         </section>

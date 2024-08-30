@@ -2,7 +2,8 @@ import { useRef, useState, useEffect } from "react";
 import { GoInfo } from 'react-icons/go';
 import { IoMdCheckmark } from 'react-icons/io';
 import { LiaTimesCircle } from 'react-icons/lia';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 const UserValid = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/;
 const PassValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
@@ -10,15 +11,13 @@ const PassValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
 function Login() {
     const userRef = useRef();
     const errRef = useRef();
-
+    const navigate = useNavigate(); // Hook untuk navigasi
     const [user, setUser] = useState('');
     const [userValidName, setValidName] = useState(false);
     const [userFocus, setUserFocus] = useState(false);
-
     const [password, setPassword] = useState('');
-    const [passValid, setpassValid] = useState(false);
-    const [passFocus, setpassFocus] = useState(false);
-
+    const [passValid, setPassValid] = useState(false);
+    const [passFocus, setPassFocus] = useState(false);
     const [errMsg, setErrMsg] = useState('');
     const [success, setSuccess] = useState(false);
 
@@ -33,18 +32,45 @@ function Login() {
 
     useEffect(() => {
         const result = PassValid.test(password);
-        setpassValid(result);
+        setPassValid(result);
     }, [password]);
 
     useEffect(() => {
         setErrMsg('');
     }, [user, password]);
 
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        if (!userValidName || !passValid) {
+            setErrMsg('Isi semua field dengan benar.');
+            return;
+        }
+
+        try {
+            const response = await axiosInstance.post('/login', {
+                username: user,
+                password: password
+            }, {
+                withCredentials: true
+            });
+
+            // Jika login berhasil, simpan token di cookies atau localStorage
+            setSuccess(true);
+            setErrMsg('');
+            setTimeout(() => {
+                navigate('/home'); // Redirect ke halaman home
+            }, 2000);
+        } catch (error) {
+            setErrMsg(error.response?.data?.message || 'Login gagal. Coba lagi.');
+            setSuccess(false);
+        }
+    };
+
     return (
         <section className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
             <p ref={errRef} className={`text-red-500 ${errMsg ? "block" : "hidden"}`} aria-live="assertive">{errMsg}</p>
             <h1 className="text-2xl font-bold mb-4">Login</h1>
-            <form className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <form onSubmit={handleLogin} className="bg-white p-6 rounded shadow-md w-full max-w-md">
                 <label htmlFor="username" className="block mb-2 font-medium">
                     Username:
                     <span className={userValidName ? "text-green-500" : "hidden"}>
@@ -89,19 +115,19 @@ function Login() {
                     required
                     aria-invalid={passValid ? "false" : "true"}
                     aria-describedby="pwnote"
-                    onFocus={() => setpassFocus(true)}
-                    onBlur={() => setpassFocus(false)}
+                    onFocus={() => setPassFocus(true)}
+                    onBlur={() => setPassFocus(false)}
                 />
                 <p id="pwnote" className={`text-sm text-gray-600 mb-4 ${passFocus && !passValid ? "block" : "hidden"}`}>
                     <GoInfo className="inline mr-1" />
                     8 to 24 characters. Must include uppercase and lowercase letters, a number and a special character. Allowed special characters: ! @ # $ %
                 </p>
 
-                <button className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                     Login
                 </button>
                 <div className="mt-2 text-gray-600">
-                    <p>belum punya akun? <Link className="font-semibold" to="register">Daftar akun</Link></p>
+                    <p>belum punya akun? <Link className="font-semibold" to="/register">Daftar akun</Link></p>
                 </div>
             </form>
         </section>
